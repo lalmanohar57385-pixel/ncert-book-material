@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>NCERT Book Material</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f5f5f5;
+  color:#222;
+}
+
+header{
+  background:#7b1113;
+  color:white;
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+.menu{
+  font-size:25px;
+  cursor:pointer;
+}
+
+.logo{
+  font-size:20px;
+  font-weight:bold;
+  flex:1;
+}
+
+.search{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  width:180px;
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
+}
+
+.hero{
+  background:#7b1113;
+  color:white;
+  padding:30px 20px;
+  border-radius:15px;
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.hero h1{
+  font-size:28px;
+  margin-bottom:10px;
+}
+
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
+}
+
+.card{
+  background:white;
+  border-radius:14px;
+  padding:20px;
+  box-shadow:0 3px 12px #0002;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.card:hover{
+  transform:translateY(-3px);
+}
+
+.card h3{
+  color:#7b1113;
+  margin-bottom:8px;
+}
+
+.card p{
+  color:#666;
+}
+
+.back{
+  border:none;
+  background:#7b1113;
+  color:white;
+  padding:10px 18px;
+  border-radius:8px;
+  margin-bottom:18px;
+  cursor:pointer;
+  font-size:15px;
+}
+
+.title{
+  color:#7b1113;
+  margin-bottom:18px;
+}
+
+.material{
+  background:white;
+  padding:18px;
+  margin:12px 0;
+  border-radius:12px;
+  box-shadow:0 2px 8px #0002;
+}
+
+.material h3{
+  color:#7b1113;
+}
+
+.material button{
+  background:#7b1113;
+  color:white;
+  border:none;
+  padding:10px 15px;
+  border-radius:7px;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+.empty{
+  background:white;
+  padding:25px;
+  border-radius:12px;
+  text-align:center;
+  color:#777;
+}
+
+.side{
+  position:fixed;
+  top:0;
+  left:-280px;
+  width:280px;
+  height:100%;
+  background:white;
+  z-index:200;
+  padding:20px;
+  box-shadow:3px 0 15px #0003;
+  transition:.3s;
+}
+
+.side.open{
+  left:0;
+}
+
+.side h2{
+  color:#7b1113;
+  margin-bottom:20px;
+}
+
+.side button{
+  display:block;
+  width:100%;
+  padding:13px;
+  margin:8px 0;
+  border:none;
+  background:#f4eeee;
+  color:#7b1113;
+  text-align:left;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#0007;
+  z-index:150;
+}
+
+.overlay.show{
+  display:block;
+}
+
+footer{
+  text-align:center;
+  padding:30px;
+  margin-top:30px;
+  background:#7b1113;
+  color:white;
+}
+
+@media(max-width:600px){
+  .search{
+    width:110px;
+  }
+
+  .hero h1{
+    font-size:23px;
+  }
+
+  .container{
+    padding:14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <span class="menu" onclick="openMenu()">☰</span>
+  <div class="logo">NCERT Book Material</div>
+  <input
+    class="search"
+    id="searchBox"
+    placeholder="Search..."
+    oninput="searchMaterial()"
+  >
+</header>
+
+<div class="side" id="sideMenu">
+  <h2>Menu</h2>
+
+  <button onclick="home()">🏠 Home</button>
+  <button onclick="openClasses()">📚 Classes</button>
+  <button onclick="openMCQ()">📝 MCQ Practice</button>
+  <button onclick="showAllMaterials()">📄 Study Material</button>
+  <button onclick="openPlanner()">📅 Study Planner</button>
+  <button onclick="closeMenu()">❌ Close</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<main class="container" id="app"></main>
+
+<footer>
+  © 2026 NCERT Book Material
+</footer>
+
+<script type="module">
+
+/* =========================
+   FIREBASE
+========================= */
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAOEs5eCBL2KS07Srdpes2Par1Yqoefes",
+  authDomain: "study-pdf-1d227.firebaseapp.com",
+  projectId: "study-pdf-1d227",
+  storageBucket: "study-pdf-1d227.firebasestorage.app",
+  messagingSenderId: "360408705902",
+  appId: "1:360408705902:web:1a32416ffe2073eb236f7f",
+  measurementId: "G-8P2YLDKQT9"
+};
+
+const appFirebase = initializeApp(firebaseConfig);
+const db = getFirestore(appFirebase);
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+let pageHistory=[];
+let currentPage="home";
+
+function navigateTo(page){
+  if(currentPage !== page){
+    pageHistory.push(currentPage);
+  }
+
+  currentPage=page;
+
+  history.pushState(
+    {page:page},
+    "",
+    "#"+page
+  );
+}
+
+window.goBack=function(){
+
+  if(pageHistory.length===0){
+    home();
+    return;
+  }
+
+  const previous=pageHistory.pop();
+
+  currentPage=previous;
+
+  history.replaceState(
+    {page:previous},
+    "",
+    "#"+previous
+  );
+
+  renderPrevious(previous);
+};
+
+window.addEventListener("popstate",function(){
+  if(pageHistory.length){
+    const previous=pageHistory.pop();
+    currentPage=previous;
+    renderPrevious(previous);
+  }else{
+    home();
+  }
+});
+
+
+/* =========================
+   HOME
+========================= */
+
+window.home=function(){
+
+  pageHistory=[];
+  currentPage="home";
+
+  history.replaceState(
+    {page:"home"},
+    "",
+    "#home"
+  );
+
+  document.getElementById("app").innerHTML=`
+
+    <div class="hero">
+      <h1>NCERT Book Material</h1>
+      <p>Classes 1 to 12 Study Portal</p>
+    </div>
+
+    <div class="card-grid">
+
+      <div class="card" onclick="openClasses()">
+        <h3>📚 Classes 1–12</h3>
+        <p>Open NCERT books and chapters</p>
+      </div>
+
+      <div class="card" onclick="openMCQ()">
+        <h3>📝 MCQ Practice</h3>
+        <p>Practice questions</p>
+      </div>
+
+      <div class="card" onclick="showAllMaterials()">
+        <h3>📄 Study Material</h3>
+        <p>PDFs and uploaded material</p>
+      </div>
+
+      <div class="card" onclick="openPlanner()">
+        <h3>📅 Study Planner</h3>
+        <p>Make your study routine</p>
+      </div>
+
+    </div>
+  `;
+};
+
+
+/* =========================
+   CLASSES
+========================= */
+
+window.openClasses=function(){
+
+  navigateTo("classes");
+
+  let html=`
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">📚 Select Class</h2>
+
+    <div class="card-grid">
+  `;
+
+  for(let i=1;i<=12;i++){
+
+    html+=`
+      <div class="card" onclick="openClass('${i}')">
+        <h3>Class ${i}</h3>
+        <p>Open Class ${i} subjects</p>
+      </div>
+    `;
+  }
+
+  html+=`</div>`;
+
+  document.getElementById("app").innerHTML=html;
+};
+
+
+/* =========================
+   SUBJECTS
+========================= */
+
+const subjects={
+
+1:["Hindi","English","Mathematics"],
+
+2:["Hindi","English","Mathematics"],
+
+3:["Hindi","English","Mathematics"],
+
+4:[
+  "Hindi",
+  "English",
+  "Mathematics",
+  "EVS"
+],
+
+5:[
+  "Hindi",
+  "English",
+  "Mathematics",
+  "EVS"
+],
+
+6:[
+  "Hindi",
+  "English",
+  "Mathematics",
+  "Science",
+  "Social Science"
+],
+
+7:[
+  "Hindi",
+  "English",
+  "Mathematics",
+  "Science",
+  "Social Science"
+],
+
+8:[
+  "Hindi",
+  "English",
+  "Mathematics",
+  "Science",
+  "Social Science"
+],
+
+9:[
+  "Hindi",
+  "English",
+  "Mathematics",
+  "Science",
+  "Social Science"
+],
+
+10:[
+  "Hindi",
+  "English",
+  "Mathematics",
+  "Science",
+  "Social Science"
+],
+
+11:[
+  "Hindi",
+  "English",
+  "Mathematics",
+  "Science"
+],
+
+12:[
+  "Hindi",
+  "English",
+  "Mathematics",
+  "Science"
+]
+
+};
+
+
+/* =========================
+   BOOKS
+========================= */
+
+const books={
+
+1:{
+Hindi:["Sarangi"],
+English:["Mridang"],
+Mathematics:["Joyful Mathematics"]
+},
+
+2:{
+Hindi:["Sarangi"],
+English:["Mridang"],
+Mathematics:["Joyful Mathematics"]
+},
+
+3:{
+Hindi:["Veena"],
+English:["Santoor"],
+Mathematics:["Maths Mela"]
+},
+
+4:{
+Hindi:["Rimjhim IV"],
+English:["Marigold IV"],
+Mathematics:["Math-Magic Book-IV"],
+EVS:["Looking Around"]
+},
+
+5:{
+Hindi:["Rimjhim V"],
+English:["Marigold V"],
+Mathematics:["Math-Magic Book-V"],
+EVS:["Looking Around"]
+},
+
+6:{
+Hindi:["Vasant"],
+English:["Honeysuckle"],
+Mathematics:["Mathematics"],
+Science:["Curiosity"],
+"Social Science":[
+  "Exploring Society: India and Beyond"
+]
+},
+
+7:{
+Hindi:["Vasant II"],
+English:["Honeycomb"],
+Mathematics:["Mathematics"],
+Science:["Science"],
+"Social Science":[
+  "Our Pasts II",
+  "Our Environment",
+  "Social and Political Life II"
+]
+},
+
+8:{
+Hindi:["Vasant III"],
+English:["Honeydew"],
+Mathematics:["Mathematics"],
+Science:["Science"],
+"Social Science":[
+  "Our Pasts III",
+  "Resources and Development",
+  "Social and Political Life III"
+]
+},
+
+9:{
+Hindi:["Kshitij II","Sparsh II"],
+English:["Beehive","Moments"],
+Mathematics:["Mathematics"],
+Science:["Science"],
+"Social Science":[
+  "India and the Contemporary World-I",
+  "Contemporary India-I",
+  "Democratic Politics-I",
+  "Economics"
+]
+},
+
+10:{
+Hindi:["Kshitij II","Sparsh II"],
+English:["First Flight","Footprints Without Feet"],
+Mathematics:["Mathematics"],
+Science:["Science"],
+"Social Science":[
+  "India and the Contemporary World-II",
+  "Contemporary India-II",
+  "Democratic Politics-II",
+  "Understanding Economic Development"
+]
+},
+
+11:{
+Hindi:["Aroh","Vitan"],
+English:["Hornbill","Snapshots"],
+Mathematics:["Mathematics"],
+Science:[
+  "Chemistry",
+  "Physics"
+]
+},
+
+12:{
+Hindi:["Aroh","Vitan"],
+English:["Flamingo","Vistas"],
+Mathematics:["Mathematics"],
+Science:[
+  "Chemistry",
+  "Physics"
+]
+}
+
+};
+
+
+/* =========================
+   EXACT / VERIFIED CHAPTER LISTS
+   WHERE AVAILABLE
+========================= */
+
+const chapters={
+
+/* CLASS 6 CURIOSITY */
+
+"6|Science|Curiosity":[
+"Chapter 1 - The Wonderful World of Science",
+"Chapter 2 - Diversity in the Living World",
+"Chapter 3 - Mindful Eating: A Path to a Healthy Body",
+"Chapter 4 - Exploring Magnets",
+"Chapter 5 - Measurement of Length and Motion",
+"Chapter 6 - Materials Around Us",
+"Chapter 7 - Temperature and its Measurement",
+"Chapter 8 - A Journey through States of Water",
+"Chapter 9 - Methods of Separation in Everyday Life",
+"Chapter 10 - Living Creatures: Exploring their Characteristics",
+"Chapter 11 - Nature's Treasures",
+"Chapter 12 - Beyond Earth",
+"Chapter 13 - Electricity and Circuits"
+],
+
+/* CLASS 9 SCIENCE */
+
+"9|Science|Science":[
+"Chapter 1 - Matter in Our Surroundings",
+"Chapter 2 - Is Matter Around Us Pure",
+"Chapter 3 - Atoms and Molecules",
+"Chapter 4 - Structure of the Atom",
+"Chapter 5 - The Fundamental Unit of Life",
+"Chapter 6 - Tissues",
+"Chapter 7 - Motion",
+"Chapter 8 - Force and Laws of Motion",
+"Chapter 9 - Gravitation",
+"Chapter 10 - Work and Energy",
+"Chapter 11 - Sound"
+],
+
+/* CLASS 10 SCIENCE */
+
+"10|Science|Science":[
+"Chapter 1 - Chemical Reactions and Equations",
+"Chapter 2 - Acids, Bases and Salts",
+"Chapter 3 - Metals and Non-metals",
+"Chapter 4 - Carbon and its Compounds",
+"Chapter 5 - Life Processes",
+"Chapter 6 - Control and Coordination",
+"Chapter 7 - How do Organisms Reproduce?",
+"Chapter 8 - Heredity",
+"Chapter 9 - Light – Reflection and Refraction",
+"Chapter 10 - The Human Eye and the Colourful World",
+"Chapter 11 - Electricity",
+"Chapter 12 - Magnetic Effects of Electric Current",
+"Chapter 13 - Our Environment"
+],
+
+/* CLASS 11 CHEMISTRY */
+
+"11|Science|Chemistry":[
+"Chapter 1 - Some Basic Concepts of Chemistry",
+"Chapter 2 - Structure of Atom",
+"Chapter 3 - Classification of Elements and Periodicity in Properties",
+"Chapter 4 - Chemical Bonding and Molecular Structure",
+"Chapter 5 - Thermodynamics",
+"Chapter 6 - Equilibrium",
+"Chapter 7 - Redox Reactions",
+"Chapter 8 - Organic Chemistry – Some Basic Principles and Techniques",
+"Chapter 9 - Hydrocarbons"
+],
+
+/* CLASS 11 PHYSICS */
+
+"11|Science|Physics":[
+"Chapter 1 - Units and Measurements",
+"Chapter 2 - Motion in a Straight Line",
+"Chapter 3 - Motion in a Plane",
+"Chapter 4 - Laws of Motion",
+"Chapter 5 - Work, Energy and Power",
+"Chapter 6 - System of Particles and Rotational Motion",
+"Chapter 7 - Gravitation",
+"Chapter 8 - Mechanical Properties of Solids",
+"Chapter 9 - Mechanical Properties of Fluids",
+"Chapter 10 - Thermal Properties of Matter",
+"Chapter 11 - Thermodynamics",
+"Chapter 12 - Kinetic Theory",
+"Chapter 13 - Oscillations",
+"Chapter 14 - Waves"
+],
+
+/* CLASS 12 CHEMISTRY */
+
+"12|Science|Chemistry":[
+"Chapter 1 - Solutions",
+"Chapter 2 - Electrochemistry",
+"Chapter 3 - Chemical Kinetics",
+"Chapter 4 - The d- and f-Block Elements",
+"Chapter 5 - Coordination Compounds",
+"Chapter 6 - Haloalkanes and Haloarenes",
+"Chapter 7 - Alcohols, Phenols and Ethers",
+"Chapter 8 - Aldehydes, Ketones and Carboxylic Acids",
+"Chapter 9 - Amines",
+"Chapter 10 - Biomolecules"
+],
+
+/* CLASS 12 PHYSICS */
+
+"12|Science|Physics":[
+"Chapter 1 - Electric Charges and Fields",
+"Chapter 2 - Electrostatic Potential and Capacitance",
+"Chapter 3 - Current Electricity",
+"Chapter 4 - Moving Charges and Magnetism",
+"Chapter 5 - Magnetism and Matter",
+"Chapter 6 - Electromagnetic Induction",
+"Chapter 7 - Alternating Current",
+"Chapter 8 - Electromagnetic Waves",
+"Chapter 9 - Ray Optics and Optical Instruments",
+"Chapter 10 - Wave Optics",
+"Chapter 11 - Dual Nature of Radiation and Matter",
+"Chapter 12 - Atoms",
+"Chapter 13 - Nuclei",
+"Chapter 14 - Semiconductor Electronics"
+]
+
+};
+
+
+/* =========================
+   OPEN CLASS
+========================= */
+
+window.openClass=function(classNo){
+
+  navigateTo("class"+classNo);
+
+  let html=`
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">📚 Class ${classNo}</h2>
+
+    <div class="card-grid">
+  `;
+
+  subjects[classNo].forEach(subject=>{
+
+    html+=`
+      <div class="card"
+           onclick="openBooks('${classNo}','${subject}')">
+
+        <h3>📖 ${subject}</h3>
+
+        <p>
+          ${
+            classNo==="11" &&
+            subject==="Science"
+            ? "Chemistry → Physics"
+            : "Open NCERT Books"
+          }
+        </p>
+
+      </div>
+    `;
+  });
+
+  html+=`</div>`;
+
+  document.getElementById("app").innerHTML=html;
+};
+
+
+/* =========================
+   OPEN BOOKS
+========================= */
+
+window.openBooks=function(classNo,subject){
+
+  navigateTo("books");
+
+  let listBooks=[];
+
+  if(
+    (classNo==="11" || classNo==="12") &&
+    subject==="Science"
+  ){
+    listBooks=["Chemistry","Physics"];
+  }else{
+    listBooks=books[classNo]?.[subject] || [];
+  }
+
+  let html=`
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">
+      📚 Class ${classNo} → ${subject}
+    </h2>
+
+    <div class="card-grid">
+  `;
+
+  if(listBooks.length===0){
+
+    html+=`
+      <div class="empty">
+        Books will be added soon.
+      </div>
+    `;
+
+  }else{
+
+    listBooks.forEach(book=>{
+
+      html+=`
+        <div class="card"
+             onclick="openChapters('${classNo}','${subject}','${escapeText(book)}')">
+
+          <h3>📕 ${book}</h3>
+
+          <p>Open Chapters →</p>
+
+        </div>
+      `;
+    });
+  }
+
+  html+=`</div>`;
+
+  document.getElementById("app").innerHTML=html;
+};
+
+
+/* =========================
+   OPEN CHAPTERS
+========================= */
+
+window.openChapters=function(classNo,subject,book){
+
+  navigateTo("chapters");
+
+  const key=classNo+"|"+subject+"|"+book;
+
+  let list=chapters[key];
+
+  /*
+    If exact chapter names are not available,
+    show numbered chapter structure.
+  */
+
+  if(!list){
+
+    let count=12;
+
+    if(classNo==="1" || classNo==="2") count=10;
+    if(classNo==="3") count=14;
+    if(classNo==="4" || classNo==="5") count=14;
+    if(classNo==="6") count=13;
+    if(classNo==="7" || classNo==="8") count=12;
+
+    list=[];
+
+    for(let i=1;i<=count;i++){
+      list.push("Chapter "+i);
+    }
+  }
+
+  let html=`
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">
+      📕 ${book}
+    </h2>
+
+    <div class="card-grid">
+  `;
+
+  list.forEach((chapter,index)=>{
+
+    html+=`
+      <div class="card"
+           onclick="openMaterial(
+             '${classNo}',
+             '${subject}',
+             '${escapeText(book)}',
+             '${escapeText(chapter)}'
+           )">
+
+        <h3>📖 ${chapter}</h3>
+
+        <p>Open PDF / Material →</p>
+
+      </div>
+    `;
+  });
+
+  html+=`</div>`;
+
+  document.getElementById("app").innerHTML=html;
+};
+
+
+/* =========================
+   MATERIAL
+========================= */
+
+window.openMaterial=async function(
+  classNo,
+  subject,
+  book,
+  chapter
+){
+
+  navigateTo("material");
+
+  document.getElementById("app").innerHTML=`
+
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">
+      📖 ${chapter}
+    </h2>
+
+    <p>
+      Class ${classNo} → ${subject} → ${book}
+    </p>
+
+    <div id="materialList">
+      <div class="empty">
+        ⏳ Loading material...
+      </div>
+    </div>
+  `;
+
+  try{
+
+    const q=query(
+      collection(db,"materials"),
+      orderBy("createdAt","desc")
+    );
+
+    const snapshot=await getDocs(q);
+
+    let found=[];
+
+    snapshot.forEach(doc=>{
+
+      const data=doc.data();
+
+      const sameClass=
+        Number(data.classNumber)===Number(classNo);
+
+      const sameSubject=
+        data.subject===subject;
+
+      const sameChapter=
+        !data.chapter ||
+        data.chapter===chapter;
+
+      if(
+        sameClass &&
+        sameSubject &&
+        sameChapter
+      ){
+        found.push(data);
+      }
+
+    });
+
+    const box=document.getElementById("materialList");
+
+    if(found.length===0){
+
+      box.innerHTML=`
+        <div class="empty">
+          📄 इस chapter का PDF अभी upload नहीं हुआ।
+          <br><br>
+          Admin panel से material upload किया जा सकता है।
+        </div>
+      `;
+
+      return;
+    }
+
+    box.innerHTML=found.map(item=>`
+
+      <div class="material">
+
+        <h3>📄 ${item.title || "Study Material"}</h3>
+
+        <p>
+          ${item.chapter || chapter}
+        </p>
+
+        <button
+          onclick="window.open('${item.pdfUrl}','_blank')">
+          📖 Open PDF
+        </button>
+
+      </div>
+
+    `).join("");
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById("materialList").innerHTML=`
+      <div class="empty">
+        ❌ Material load नहीं हो पाया।
+      </div>
+    `;
+  }
+};
+
+
+/* =========================
+   ALL MATERIAL
+========================= */
+
+window.showAllMaterials=async function(){
+
+  navigateTo("all-material");
+
+  document.getElementById("app").innerHTML=`
+
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">📄 All Study Material</h2>
+
+    <div id="allMaterials">
+      <div class="empty">⏳ Loading...</div>
+    </div>
+  `;
+
+  try{
+
+    const q=query(
+      collection(db,"materials"),
+      orderBy("createdAt","desc")
+    );
+
+    const snapshot=await getDocs(q);
+
+    const list=[];
+
+    snapshot.forEach(doc=>{
+      list.push(doc.data());
+    });
+
+    const box=document.getElementById("allMaterials");
+
+    if(!list.length){
+
+      box.innerHTML=`
+        <div class="empty">
+          अभी कोई material upload नहीं हुआ।
+        </div>
+      `;
+
+      return;
+    }
+
+    box.innerHTML=list.map(item=>`
+
+      <div class="material">
+
+        <h3>📄 ${item.title}</h3>
+
+        <p>
+          Class ${item.classNumber}
+          • ${item.subject}
+          • ${item.chapter || "Material"}
+        </p>
+
+        <button
+          onclick="window.open('${item.pdfUrl}','_blank')">
+          Open PDF
+        </button>
+
+      </div>
+
+    `).join("");
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById("allMaterials").innerHTML=`
+      <div class="empty">
+        ❌ Error loading materials.
+      </div>
+    `;
+  }
+};
+
+
+/* =========================
+   SEARCH
+========================= */
+
+window.searchMaterial=function(){
+
+  const value=
+    document.getElementById("searchBox")
+    .value
+    .trim()
+    .toLowerCase();
+
+  if(value.length<2){
+    return;
+  }
+
+  navigateTo("search");
+
+  document.getElementById("app").innerHTML=`
+
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">
+      🔎 Search: ${value}
+    </h2>
+
+    <div class="empty">
+      Search feature is connected to study material.
+      <br><br>
+      Open <b>Study Material</b> to see uploaded PDFs.
+    </div>
+  `;
+};
+
+
+/* =========================
+   MCQ
+========================= */
+
+const mcqs=[
+
+{
+q:"Water का chemical formula क्या है?",
+options:["CO2","H2O","O2","NaCl"],
+answer:1
+},
+
+{
+q:"भारत की राजधानी क्या है?",
+options:["Mumbai","Delhi","Chandigarh","Jaipur"],
+answer:1
+},
+
+{
+q:"2 + 2 कितना होता है?",
+options:["3","4","5","6"],
+answer:1
+},
+
+{
+q:"Sun किसका star है?",
+options:["Earth","Solar System","Moon","Mars"],
+answer:1
+},
+
+{
+q:"H2O को क्या कहते हैं?",
+options:["Oxygen","Hydrogen","Water","Carbon"],
+answer:2
+}
+
+];
+
+let mcqIndex=0;
+let score=0;
+
+window.openMCQ=function(){
+
+  navigateTo("mcq");
+
+  document.getElementById("app").innerHTML=`
+
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">📝 MCQ Practice</h2>
+
+    <div class="card">
+
+      <h3>Practice MCQs</h3>
+
+      <p>
+        Questions: ${mcqs.length}
+      </p>
+
+      <br>
+
+      <button
+        class="back"
+        onclick="startMCQ()">
+        ▶ Start MCQ
+      </button>
+
+    </div>
+  `;
+};
+
+
+window.startMCQ=function(){
+
+  mcqIndex=0;
+  score=0;
+
+  navigateTo("quiz");
+
+  showQuestion();
+};
+
+
+function showQuestion(){
+
+  const q=mcqs[mcqIndex];
+
+  let html=`
+
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">
+      Question ${mcqIndex+1}/${mcqs.length}
+    </h2>
+
+    <div class="card">
+
+      <h3>${q.q}</h3>
+
+      <br>
+  `;
+
+  q.options.forEach((option,index)=>{
+
+    html+=`
+      <button
+        style="
+          display:block;
+          width:100%;
+          padding:13px;
+          margin:8px 0;
+          border:1px solid #ddd;
+          border-radius:8px;
+          background:white;
+          cursor:pointer;
+        "
+        onclick="answerMCQ(${index})">
+
+        ${option}
+
+      </button>
+    `;
+  });
+
+  html+=`</div>`;
+
+  document.getElementById("app").innerHTML=html;
+}
+
+
+window.answerMCQ=function(index){
+
+  if(index===mcqs[mcqIndex].answer){
+    score++;
+  }
+
+  mcqIndex++;
+
+  if(mcqIndex>=mcqs.length){
+    showResult();
+  }else{
+    showQuestion();
+  }
+};
+
+
+function showResult(){
+
+  navigateTo("result");
+
+  document.getElementById("app").innerHTML=`
+
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <div class="hero">
+
+      <h1>🎉 MCQ Complete</h1>
+
+      <p>
+        Your Score:
+        <b>${score}/${mcqs.length}</b>
+      </p>
+
+    </div>
+
+    <div class="card"
+         onclick="startMCQ()">
+
+      <h3>🔄 Try Again</h3>
+
+      <p>Practice again</p>
+
+    </div>
+  `;
+}
+
+
+/* =========================
+   STUDY PLANNER
+========================= */
+
+window.openPlanner=function(){
+
+  navigateTo("planner");
+
+  document.getElementById("app").innerHTML=`
+
+    <button class="back" onclick="goBack()">← Back</button>
+
+    <h2 class="title">📅 Study Planner</h2>
+
+    <div class="card">
+
+      <h3>Today's Study Plan</h3>
+
+      <br>
+
+      <p>☐ Mathematics</p>
+      <br>
+      <p>☐ Science</p>
+      <br>
+      <p>☐ English</p>
+      <br>
+      <p>☐ Revision</p>
+
+    </div>
+  `;
+};
+
+
+/* =========================
+   RENDER PREVIOUS
+========================= */
+
+function renderPrevious(page){
+
+  if(page==="home"){
+    home();
+    return;
+  }
+
+  /*
+    For safety, if the user uses browser Back,
+    return to home for pages whose parameters
+    are no longer available.
+  */
+
+  if(
+    page==="classes" ||
+    page.startsWith("class")
+  ){
+    openClasses();
+    return;
+  }
+
+  if(page==="mcq"){
+    openMCQ();
+    return;
+  }
+
+  if(page==="planner"){
+    openPlanner();
+    return;
+  }
+
+  if(page==="all-material"){
+    showAllMaterials();
+    return;
+  }
+
+  home();
+}
+
+
+/* =========================
+   MENU
+========================= */
+
+window.openMenu=function(){
+
+  document
+    .getElementById("sideMenu")
+    .classList.add("open");
+
+  document
+    .getElementById("overlay")
+    .classList.add("show");
+};
+
+
+window.closeMenu=function(){
+
+  document
+    .getElementById("sideMenu")
+    .classList.remove("open");
+
+  document
+    .getElementById("overlay")
+    .classList.remove("show");
+};
+
+
+/* =========================
+   ESCAPE TEXT
+========================= */
+
+function escapeText(text){
+
+  return String(text)
+    .replace(/'/g,"&#39;")
+    .replace(/"/g,"&quot;");
+}
+
+
+/* =========================
+   START
+========================= */
+
+home();
+
+</script>
+
+</body>
+</html>
